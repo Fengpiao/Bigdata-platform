@@ -1,5 +1,5 @@
-** 部署私有Docker Registry
-1.主节点上 编辑/etc/default/docker文件，末尾添加上  
+** 部署私有Docker Registry  
+1.主节点上编辑/etc/default/docker文件，末尾添加上  
 
     DOCKER_OPTS="$DOCKER_OPTS --insecure-registry kmx.k2data.com.cn:5000"
 
@@ -23,12 +23,12 @@ curl http://166.111.7.245:5000/v2/mysql/tags/list 才可以，返回 {"name":"my
 
 4.其他节点上同样要编辑 /etc/default/docker 文件，末尾添加上  
 
-DOCKER_OPTS="--insecure-registry 166.111.7.245:5000"  
+    DOCKER_OPTS="--insecure-registry 166.111.7.245:5000"  
 
 保存后重启docker  
 
     $ sudo service docker restart  
 
-5. 其他主机上pull mysql  
+5.其他主机上pull mysql  
 
     $ sudo docker pull 166.111.7.245:5000/mysql:5.7.11  

@@ -71,7 +71,7 @@
 
 末尾加上  
 
-	vm.swappiness=10
+	vm.swappiness=10  
 
 执行下面命令生效  
 
@@ -108,177 +108,98 @@
 
 在任何一台机器上使用ssh 免密码登陆，则说明配置成功  
 
-## 2.Installing
-(1) 安装java
-从oracle官网上下载linux 64bit的JDK8，解压后设置环境变量
-$ sudo vim /etc/profile
-在末尾添加
-# setting java
-export JAVA_HOME=/usr/java/jdk1.8
-export PATH=$JAVA_HOME/bin:$PATH
-wq 保存退出
- # source /etc/profile 生效。
+## 2.Installing  
+##### 安装java  
+从oracle官网上下载linux 64bit的JDK8，解压后设置环境变量，在/etc/profile文件末尾添加  
+
+	$ sudo vim /etc/profile  
+	# setting java  
+	export JAVA_HOME=/usr/java/jdk1.8  
+	export PATH=$JAVA_HOME/bin:$PATH  
+
+wq 保存退出。   
+
+	# source /etc/profile  
+ 
 编辑/etc/environment 设置全局变量
-$ sudo vim /etc/environment
+
+	$ sudo vim /etc/environment
+
 修改内容如下：
 
-$ source /etc/environment 生效
+	$ source /etc/environment
 
-(2) 离线安装Docker
-解压安装包，所有节点上执行以下指令完成安装
-$ sudo tar zxvf docker-offline-package-1.2.1-release.tar.gz
-$ cd docker-offline-package
-$ sudo ./install.sh all
-复制文件到另外两台机子上，并执行相同操作
+##### 离线安装Docker
+解压安装包，所有节点上执行以下指令完成安装  
 
-(3) 离线安装etcd
-为了能够搭建docker集群，我们需要借助etcd创建docker overlay网络。
-$ tar xzvf etcd-v2.3.1-linux-amd64.tar.gz
-$ cd etcd-v2.3.1-linux-amd64
-修改etcd.conf,修改ip
-server1=http://166.111.7.245
-server2=http://166.111.7.246
-server3=http://166.111.7.247
-server4=http://166.111.7.248
-server5=http://166.111.7.250
-tip:etcd集群至少配三个，且为奇数。
-拷贝文件到其他节点上
-$ scp -r /home/cst/src/etcd-v2.3.1-linux-amd64/ cst@166.111.7.246:/home/cst/src
-在每个server上执行相对应的 $ sudo./start.sh server[]
+	$ sudo tar zxvf docker-offline-package-1.2.1-release.tar.gz  
+	$ cd docker-offline-package  
+	$ sudo ./install.sh all  
+
+复制文件到另外两台机子上，并执行相同操作。
+
+##### 离线安装etcd
+为了能够搭建docker集群，我们需要借助etcd创建docker overlay网络。  
+
+	$ tar xzvf etcd-v2.3.1-linux-amd64.tar.gz  
+	$ cd etcd-v2.3.1-linux-amd64  
+
+修改etcd.conf,修改ip  
+
+	server1=http://166.111.7.245  
+	server2=http://166.111.7.246  
+	server3=http://166.111.7.247  
+	server4=http://166.111.7.248  
+	server5=http://166.111.7.250  
+	
+tip:etcd集群至少配三个，且为奇数。  
+拷贝文件到其他节点上  
+
+	$ scp -r /home/cst/src/etcd-v2.3.1-linux-amd64/ cst@166.111.7.246:/home/cst/src
+
+在每个server上执行相对应的命令：  
+
+	$ sudo./start.sh server[]  
 
 
 或者
-./etcd --name server2 --listen-client-urls http://166.111.7.246:2379 --advertise-client-urls http://166.111.7.246:2379 --listen-peer-urls http://166.111.7.246:2380 --initial-advertise-peer-urls http://166.111.7.246:2380 --initial-cluster-token etcd-cluster-1 --initial-cluster 'server1=http://166.111.7.246:2380,server2=http://166.111.7.246:2380,server3=http://166.111.7.247:2380,server4=http://166.111.7.248:2380,server5=http://166.111.7.250:2380' --initial-cluster-state new --enable-pprof
 
-验证
-在上面每个节点上都启动etcd之后，在任意一个节点上执行./etcdctl --endpoints http://166.111.7.246:2379 cluster-health 能看到：
+	./etcd  --name server2 
+		--listen-client-urls http://166.111.7.246:2379 
+		--advertise-client-urls http://166.111.7.246:2379 
+		--listen-peer-urls http://166.111.7.246:2380 
+		--initial-advertise-peer-urls http://166.111.7.246:2380 
+		--initial-cluster-token etcd-cluster-1 
+		--initial-cluster 'server1=http://166.111.7.246:2380,server2=http://166.111.7.246:2380,server3=http://166.111.7.247:2380,server4=
+		http://166.111.7.248:2380,server5=http://166.111.7.250:2380' 
+		--initial-cluster-state new 
+		--enable-pprof
 
+验证:
+在上面每个节点上都启动etcd之后，在任意一个节点上执行  
 
-到此只是完成了etcd服务端的安装，还需要对每个KMX节点做如下设置：
-$ sudo vim /etc/default/docker   添加下面内容：
-DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:4243 -H unix:///var/run/docker.sock"
-DOCKER_OPTS="$DOCKER_OPTS --cluster-store=etcd://166.111.7.245:2379,166.111.7.246:2379,166.111.7.247:2379 --cluster-advertise=eth0:4243"
+	./etcdctl --endpoints http://166.111.7.246:2379 cluster-health  
+
+能看到：
+
+到此只是完成了etcd服务端的安装，还需要对每个KMX节点做如下设置：  
+
+$ sudo vim /etc/default/docker  
+
+添加下面内容：  
+
+	DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:4243 -H unix:///var/run/docker.sock"  
+	DOCKER_OPTS="$DOCKER_OPTS --cluster-store=etcd://166.111.7.245:2379,166.111.7.246:2379,166.111.7.247:2379 --cluster-advertise=eth0:4243"  
+
 重启docker   
-$ sudo service docker restart
-确认生效
-$ sudo docker info 
 
-打开浏览器访问http://166.111.7.245:2379/v2/keys/docker/nodes，应看到所有docker工作机都被注册。访问etcd集群的其它节点（更换上面地址中的ip，其它地址不变），应该能看到相同的内容。
+	$ sudo service docker restart  
 
+确认生效  
 
-(4)安装Cloudera相关服务
-Cloudera产品的安装需要依赖数据库，这里选择外部MySql数据库
-主节点上安装mysql，执行：
-$ sudo apt-get install mysql-server
-备份原有的数据库文件：
-$ sudo mkdir /var/lib/mysql_backup
-$ sudo mv /var/lib/mysql/ib_logfile0 /var/lib/mysql_backup
-$ sudo mv /var/lib/mysql/ib_logfile1 /var/lib/mysql_backup
-$ sudo cp /etc/mysql/my.cnf /var/lib/mysql_backup
-my.cnf配置替换如下内容
+	$ sudo docker info 
 
-
-启动Mysql服务：
-$ sudo service mysql start
-初始化数据库及用户
-$ mysql -uroot -p < init.sql
-
-
-安装Cloudera
-Cloudera Manager下载地址：
-http://archive.cloudera.com/cm5/cm/5/
-CDH安装包地址： 
-http://archive.cloudera.com/cdh5/parcels/5.9.0/
-(注意好系统对应的版本，我一开始老是安装出错最后检查发现是因为盲目跟着网上的教程的包，因为教程提供的链接资源是centos的包 /(ㄒoㄒ)/~~，我ubuntu系统应该下载trusty)
-
-主节点上解压cm压缩包并放在/opt目录下
-$ sudo tar -zxvf cloudera-manager-trusty-cm5.9.0_amd64.tar.gz -C /opt
-去MySql的官网下载JDBC驱动，不论哪一个版本都可以主要是要解压后的mysql-connector-java-5.1.41-bin.jar 文件，放到主节点上的 /opt/cm-5.9.0/share/cmf/lib/下。
-初始化cloudera manager数据库配置，主节点上执行：
-$ sudo /opt/cm-5.9.0/share/cmf/schema/scm_prepare_database.sh mysql cm scm cdh -uroot -proot106A –-scm-host cdh1 scm scm scm
-
-其他配置
-1.在所有节点创建cloudera-scm用户
-$ sudo useradd --system --home=/opt/cm-5.9.0/run/cloudera-scm-server/ --no-create-home --shell=/bin/false --comment "Cloudera SCM User" cloudera-scm
-
-2.修改cloudera-scm-agent/config.ini中的server_host为主节点的主机名
-$ sudo vim /opt/cm-5.9.0/etc/cloudera-scm-agent/config.ini
-server_host=cdh1
-
-3.同步Agent到其他节点（因为直接放在opt目录下权限拒绝，所以先间接放在home目录下再移到opt目录下）
-$ scp -r /opt/cm-5.9.0 cst@166.111.7.247:/home/cst
-$ sudo mv /home/cst/cm-5.9.0 /opt/cm-5.9.0 
-
-4.准备Parcels，用以安装CDH5
-将CHD5相关的Parcel包放到主节点的/opt/cloudera/parcel-repo/目录中（parcel-repo需要手动创建）。 
-相关的文件如下： 
-CDH-5.9.0-1.cdh5.9.0.p0.23-trusty.parcel 
-CDH-5.9.0-1.cdh5.9.0.p0.23-trusty.parcel.sha1 
-manifest.json
-最后将CDH-5.9.0-1.cdh5.9.0.p0.23-wheezy.parcel.sha1重命名为CDH-5.9.0-1.cdh5.9.0.p0.23-wheezy.parcel.sha
-
-5.相关启动脚本
-$ sudo /opt/cm-5.9.0/etc/init.d/cloudera-scm-server start 
-$ sudo /opt/cm-5.9.0/etc/init.d/cloudera-scm-agent start 
-<主节点都启动、其他节点只启动agent>
-
-打开浏览器 输入http://cdh1:7180 
-按照步骤开始配置就行了
-
-完成Cloudera服务安装后，需要进行如下初始化工作：
-（1）在部署了HDFS Namenode的节点上以root用户运行如下脚本：
-
-
-（2）修改HIve配置
-CM管理界面（Hive -> 配置 -> 服务范围 -> 高级 -> hive-site.xml 的 Hive 服务高级配置代码段 -> 点击右侧 View as XML）添加（更新）如下信息：
-
-hive.exec.dynamic.partition.mode
-nostrict
-
-
-hive.exec.dynamic.partition
-true
-
-
-hive.exec.max.dynamic.partitions
-81920
-
-
-hive.exec.max.dynamic.partitions.pernode
-81920
-
-
-parquet.column.index.access
-true
-
-
-hive.merge.size.per.task
-1024000000
-
-
-hive.input.dir.recursive
-true
-
-
-hive.mapred.supports.subdirectories
-true
-
-
-hive.supports.subdirectories
-true
-
-
-mapred.input.dir.recursive
-true
-
-(3) 配置主机监控触发器, CM管理界面->所有主机->配置->监控->主机触发器
-[{"validityWindowInMs": 300000, "triggerName": "cpu_iowait_rate_bad", "suppressed": false, "triggerExpression": "IF (select cpu_iowait_rate where entityName=$HOSTID AND last(cpu_iowait_rate / getHostFact(numCores, 1)) > 0.15) DO health:bad", "enabled": true, "expressionEditorConfig": null, "streamThreshold": 3}, {"validityWindowInMs": 300000, "triggerName": "cpu_load_5_bad", "suppressed": false, "triggerExpression": "IF (select load_5 where entityName=$HOSTID AND last(load_5) > 10) DO health:bad", "enabled": true, "expressionEditorConfig": null, "streamThreshold": 3}, {"validityWindowInMs": 300000, "triggerName": "cpu_soft_irq_rate_bad", "suppressed": false, "triggerExpression": "IF (select cpu_iowait_rate where entityName=$HOSTID AND last(cpu_soft_irq_rate / getHostFact(numCores, 1)) > 0.02) DO health:bad", "enabled": true, "expressionEditorConfig": null, "streamThreshold": 3}, {"validityWindowInMs": 300000, "triggerName": "memory_available_bad", "suppressed": false, "triggerExpression": "IF (select physical_memory_used, physical_memory_total where entityName=$HOSTID AND last(physical_memory_used/physical_memory_total) > 0.95) DO health:bad", "enabled": true, "expressionEditorConfig": null, "streamThreshold": 3}, {"validityWindowInMs": 300000, "triggerName": "net_receive_rate_bad", "suppressed": false, "triggerExpression": "IF (select total_bytes_receive_rate_across_network_interfaces where entityName=$HOSTID AND last( total_bytes_receive_rate_across_network_interfaces)>50Mb) DO health:bad", "enabled": true, "expressionEditorConfig": null, "streamThreshold": 3}, {"validityWindowInMs": 300000, "triggerName": "disk_free_percent_bad", "suppressed": false, "triggerExpression": "IF (select capacity_free, capacity where entityName=$HOSTID AND last(capacity_free/capacity)<0.05) DO health:bad", "enabled": true, "expressionEditorConfig": null, "streamThreshold": 3}, {"validityWindowInMs": 300000, "triggerName": "cpu_iowait_rate_concerning", "suppressed": false, "triggerExpression": "IF (select cpu_iowait_rate where entityName=$HOSTID AND last(cpu_iowait_rate / getHostFact(numCores, 1)) > 0.15) DO health:concerning", "enabled": true, "expressionEditorConfig": null, "streamThreshold": 3}, {"validityWindowInMs": 300000, "triggerName": "cpu_load_5_concerning", "suppressed": false, "triggerExpression": "IF (select load_5 where entityName=$HOSTID AND last(load_5) > 8) DO health:bad", "enabled": true, "expressionEditorConfig": null, "streamThreshold": 3}, {"validityWindowInMs": 300000, "triggerName": "cpu_soft_irq_rate_concerning", "suppressed": false, "triggerExpression": "IF (select cpu_iowait_rate where entityName=$HOSTID AND last(cpu_soft_irq_rate / getHostFact(numCores, 1)) > 0.015) DO health:concerning", "enabled": true, "expressionEditorConfig": null, "streamThreshold": 3}, {"validityWindowInMs": 300000, "triggerName": "memory_available_concerning", "suppressed": false, "triggerExpression": "IF (select physical_memory_used, physical_memory_total where entityName=$HOSTID AND last(physical_memory_used/physical_memory_total) > 0.9) DO health:concerning", "enabled": true, "expressionEditorConfig": null, "streamThreshold": 3}, {"validityWindowInMs": 300000, "triggerName": "net_receive_rate_concerning", "suppressed": false, "triggerExpression": "IF (select total_bytes_receive_rate_across_network_interfaces where entityName=$HOSTID AND last( total_bytes_receive_rate_across_network_interfaces)>40Mb) DO health:concerning", "enabled": true, "expressionEditorConfig": null, "streamThreshold": 3}, {"validityWindowInMs": 300000, "triggerName": "disk_free_percent_concerning", "suppressed": false, "triggerExpression": "IF (select capacity_free, capacity where entityName=$HOSTID AND last(capacity_free/capacity)<0.1) DO health:concerning", "enabled": true, "expressionEditorConfig": null, "streamThreshold": 3}]
-
-cloudera 安装参考 
-http://www.cnblogs.com/pojishou/archive/2017/01/12/6267616.html
-http://blog.csdn.net/zyj8170/article/details/53308828
-http://snglw.blog.51cto.com/5832405/1600475
-
+打开浏览器访问 http://166.111.7.245:2379/v2/keys/docker/nodes，应看到所有docker工作机都被注册。访问etcd集群的其它节点（更换上面地址中的ip，其它地址不变），应该能看到相同的内容。
 
 安装KMX
 导入开-compose镜像包

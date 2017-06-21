@@ -1,23 +1,23 @@
 ## preparation
-* 免密验证  
+##### 免密验证  
 确保是root用户或者有sudo权限的免密码验证用户，给用户赋权并且免密码操作：  
 在 /etc/sudoers文件中加上一行  
 
-    cst ALL=(ALL:ALL) NOPASSWD:ALL   
+	cst ALL=(ALL:ALL) NOPASSWD:ALL   
 
-* 修改主机名  
+##### 修改主机名  
 
-    $ sudo sysctl kernel.hostname=cdh1  
+	$ sudo sysctl kernel.hostname=cdh1  
     
 修改hostname，注释127.0.1.1那一行并且添加所有节点ip和hostname的映射关系  
 
-    $ sudo vi /etc/hosts  
+	$ sudo vi /etc/hosts  
 
 修改好host后，重启网络生效  
 
-    $ sudo /etc/init.d/networking restart  
+	$ sudo /etc/init.d/networking restart  
 
-(3) 时间同步
+##### 时间同步
 主节点上操作：
 $ sudo  apt-get update && sudo apt-get install -y ntp
 向文件中添加下列配置行使LAN中其它主机能够访问该服务，其中的CIDR地址根据物理主机的网络情况更改

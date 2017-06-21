@@ -1,4 +1,4 @@
-## preparation
+## 1.preparation
 ##### 免密验证  
 确保是root用户或者有sudo权限的免密码验证用户，给用户赋权并且免密码操作：  
 在 /etc/sudoers文件中加上一行  
@@ -17,73 +17,98 @@
 
 	$ sudo /etc/init.d/networking restart  
 
-##### 时间同步
-主节点上操作：
-$ sudo  apt-get update && sudo apt-get install -y ntp
-向文件中添加下列配置行使LAN中其它主机能够访问该服务，其中的CIDR地址根据物理主机的网络情况更改
-$ sudo vi /etc/ntp.conf
-#上层ntp服务
-server 166.111.7.245 prefer
-# 如果在/etc/ntp.conf中定义的server都不可用时，让NTP server和自身保持同步将使用local 时间作为ntp服务提供给ntp客户端
-server 127.127.1.0
-fudge 127.127.1.0 stratum 10
-# 允许这个网段的对时请求
-restrict 166.111.7.0 mask 255.255.255.0 nomodify notrap
-重启服务
-# sudo service ntp restart
-验证
- # ntpq -p
+##### 时间同步  
+主节点上操作：  
 
-其他节点上：
-$ sudo apt-get update && sudo apt-get install -y ntp
-$ sudo vi /etc/ntp.conf
-server 166.111.7.245
-重启服务 
-# sudo service ntp restart
+	$ sudo  apt-get update && sudo apt-get install -y ntp  
+	
+向文件中添加下列配置行使LAN中其它主机能够访问该服务，其中的CIDR地址根据物理主机的网络情况更改  
+
+	$ sudo vi /etc/ntp.conf  
+
+	#上层ntp服务  
+	server 166.111.7.245 prefer  
+	#如果在/etc/ntp.conf中定义的server都不可用时，让NTP server和自身保持同步将使用local 时间作为ntp服务提供给ntp客户端  
+	server 127.127.1.0  
+	fudge 127.127.1.0 stratum 10  
+	#允许这个网段的对时请求  
+	restrict 166.111.7.0 mask 255.255.255.0 nomodify notrap  
+	
+重启服务  
+
+	# sudo service ntp restart  
+
 验证  
-# ntpq -p
+
+	# ntpq -p  
+
+其他节点上：  
+
+	$ sudo apt-get update && sudo apt-get install -y ntp
+	$ sudo vi /etc/ntp.conf
+	server 166.111.7.245  
+
+重启服务  
+
+	# sudo service ntp restart  
+
+验证  
+
+	# ntpq -p
 
 可以看到offset 特别小，这个过程需要一段时间可以待会儿再回来验证。
-参考：
-http://www.cnblogs.com/xwdreamer/p/3448773.html
 
-(4) 关闭SWAP
-为了避免swap带来的性能损耗，要求将部署KMX的各节点swap功能关闭，打开主机的
-/etc/fstab，注释掉swap挂载点相关的行：
+##### 关闭SWAP  
+为了避免swap带来的性能损耗，要求将部署KMX的各节点swap功能关闭，打开主机的/etc/fstab，注释掉swap挂载点相关的行：  
 
-重启主机，或者执行如下命令使配置生效：
-$ sudo swapoff -a
+重启主机，或者执行如下命令使配置生效：  
 
-(5) 设置swap空间
-$ sudo vim /etc/sysctl.conf
-末尾加上
-vm.swappiness=10
-$ sudo sysctl -p 生效
-其它节点上执行相同操作
+	$ sudo swapoff -a  
 
-(6) SSH免密匙登陆
-$ ssh-keygen -t rsa
-一路回车直至结束, 默认情况下会在~/.ssh文件夹下生成两个文件,id_rsa和id_rsa.pub, 将id_rsa.pub输出到authorized_keys文件中
-$ cd ~/.ssh
-$ cat id_rsa.pub >>authorized_key_1
+##### 设置swap空间  
 
-所有的机器上均执行上述操作生成authorized_key_* 文件后，将所有机器上的authorized_key_* 文件拷贝到第一台机器的~/.ssh文件夹下。
-cst@s2:~/src/spark$ scp authorized_key_2 cst@166.111.7.244:~/.ssh/authorized_key_2
-cst@s3:~/src/spark$ scp authorized_key_3 cst@166.111.7.244:~/.ssh/authorized_key_3
+	$ sudo vim /etc/sysctl.conf  
 
-在pc1上将所有的authorized_keys合并为一个
-cat authorized_keys_*  >>authorized_keys
+末尾加上  
 
-将authorized_keys发送到每台机器
-cst@s1:~/.ssh$ scp authorized_keys cst@166.111.7.245:~/.ssh/authorized_keys
-cst@s1:~/.ssh$ scp authorized_keys cst@166.111.7.246:~/.ssh/authorized_keys
+	vm.swappiness=10
 
-将authorized_keys文件的权限改为600，每台机子上操作：
-$ chmod 600 authorized_keys
-在任何一台机器上使用ssh 免密码登陆，则说明配置成功
+执行下面命令生效  
 
+	$ sudo sysctl -p  
 
-2.[Installing]
+其它节点上执行相同操作。  
+
+##### SSH免密匙登陆  
+
+	$ ssh-keygen -t rsa  
+
+一路回车直至结束, 默认情况下会在~/.ssh文件夹下生成两个文件,id_rsa和id_rsa.pub, 将id_rsa.pub输出到authorized_keys文件中  
+
+	$ cd ~/.ssh  
+	$ cat id_rsa.pub >>authorized_key_1  
+
+所有的机器上均执行上述操作生成authorized_key_* 文件后，将所有机器上的authorized_key_* 文件拷贝到第一台机器的~/.ssh文件夹下。  
+
+	cst@s2:~/src/spark$ scp authorized_key_2 cst@166.111.7.244:~/.ssh/authorized_key_2  
+	cst@s3:~/src/spark$ scp authorized_key_3 cst@166.111.7.244:~/.ssh/authorized_key_3  
+
+在pc1上将所有的authorized_keys合并为一个  
+
+	cat authorized_keys_*  >>authorized_keys  
+
+将authorized_keys发送到每台机器  
+
+	cst@s1:~/.ssh$ scp authorized_keys cst@166.111.7.245:~/.ssh/authorized_keys  
+	cst@s1:~/.ssh$ scp authorized_keys cst@166.111.7.246:~/.ssh/authorized_keys  
+
+将authorized_keys文件的权限改为600，每台机子上操作：  
+
+	$ chmod 600 authorized_keys  
+
+在任何一台机器上使用ssh 免密码登陆，则说明配置成功  
+
+## 2.Installing
 (1) 安装java
 从oracle官网上下载linux 64bit的JDK8，解压后设置环境变量
 $ sudo vim /etc/profile

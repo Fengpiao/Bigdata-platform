@@ -151,8 +151,7 @@ wq 保存退出。  
 	server3=http://166.111.7.247  
 	server4=http://166.111.7.248  
 	server5=http://166.111.7.250  
-	
-tip:etcd集群至少配三个，且为奇数。  
+	 
 拷贝文件到其他节点上  
 
 	$ scp -r /home/cst/src/etcd-v2.3.1-linux-amd64/ cst@166.111.7.246:/home/cst/src
@@ -160,7 +159,6 @@ tip:etcd集群至少配三个，且为奇数。
 在每个server上执行相对应的命令：  
 
 	$ sudo./start.sh server[]  
-
 
 或者
 
@@ -184,7 +182,7 @@ tip:etcd集群至少配三个，且为奇数。
 
 到此只是完成了etcd服务端的安装，还需要对每个KMX节点做如下设置：  
 
-$ sudo vim /etc/default/docker  
+	$ sudo vim /etc/default/docker  
 
 添加下面内容：  
 
@@ -199,7 +197,7 @@ $ sudo vim /etc/default/docker
 
 	$ sudo docker info 
 
-打开浏览器访问 http://166.111.7.245:2379/v2/keys/docker/nodes，应看到所有docker工作机都被注册。访问etcd集群的其它节点（更换上面地址中的ip，其它地址不变），应该能看到相同的内容。
+打开浏览器访问 http://166.111.7.245:2379/v2/keys/docker/nodes，  应看到所有docker工作机都被注册。访问etcd集群的其它节点（更换上面地址中的ip，其它地址不变），应该能看到相同的内容。
 
 ## Docker镜像部署  
 ###### docker-compose
@@ -271,7 +269,7 @@ KMX提供了命令行工具，启动方式如下：
 
 	docker-compose up -d elasticsearch    
 	
-访问 http://stream1-ip:9200地址，看到如下信息表示正确安装：  
+访问 http://stream1-ip:9200  地址，看到如下信息表示正确安装：  
 
 
 ##### Logstash  
@@ -303,16 +301,16 @@ KMX提供了命令行工具，启动方式如下：
 	docker-compose -f config.yml up ddm-raw-avro-topo  #提交协议转化拓扑（json格式）：AdapterTopology  
 	docker-compose -f config.yml up ddm-raw-avro-topo-binary  #提交协议转化拓扑（二进制格式）：BinaryAdapterTopology  
 
-访问地址http://<node1_ip>:8080/index.html，在topology summary中看到如下7个拓扑，确保每个拓扑的Num workers不等于0：  
+访问地址http://<node1_ip>:8080/index.html，在topology summary中看到如下7个拓扑，确保每个拓扑的Num workers不等于0：   
 
-其中一个为0但点进去后没有发现error,第一个点进去发现了error"java.lang.RuntimeException: java.lang.RuntimeException: java.lang.RuntimeException: org.apache.zookeeper.KeeperException$ConnectionLossException: KeeperErrorCode = ConnectionLoss for /brokers/topics/d",
-查看日志文件 http://166.111.7.246:8000/log?file=AdapterTopology-13-1491491766-worker-6700.log
-没有error信息并且“Session establishment complete on server 166.111.7.246/166.111.7.246:2181, sessionid = 0x15b43e66b550029, negotiated timeout = 40000”可以不用管。  
+其中一个为0但点进去后没有发现error,第一个点进去发现了error"java.lang.RuntimeException: java.lang.RuntimeException: java.lang.RuntimeException: org.apache.zookeeper.KeeperException$ConnectionLossException: KeeperErrorCode = ConnectionLoss for /brokers/topics/d"   
+查看日志文件 http://166.111.7.246:8000/log?file=AdapterTopology-13-1491491766-worker-6700.log   
+没有error信息并且“Session establishment complete on server 166.111.7.246/166.111.7.246:2181, sessionid = 0x15b43e66b550029, negotiated timeout = 40000”可以不用管。   
 重点check：  
-SchedulerTopology的Spout log，查看方法是：  
-在Storm ui首页http://<node1_ip>:8080/index.html点击SchedulerTopology名字，跳转页面后在Spouts区域点击“scheduler-spout”名字，进入spout界面；在Executors区域点击Port端口，修改跳转地址中的域名，比如http://storm-supervisor2:8000/log?file=SchedulerTopology-29-1490003819-worker-6705.log中的storm-supervisor2替换为实际部署storm-supervisor2的主机ip（此处是node4的ip）。  
-点击Download full log，下载完整日志，正常情况下日志中不应该包含错误栈或者Error信息。  
-HdfsTopology的Spout log，查看方法与上述DataLoadScheduleTopology类似，不过这里的Spout名称为"hdfs-kafka-spout"，同样需要确保spout日志中不能包含错误栈或者Errors信息。  
+SchedulerTopology的Spout log，查看方法是：   
+在Storm ui首页http://<node1_ip>:8080/index.html点击SchedulerTopology名字，跳转页面后在Spouts区域点击“scheduler-spout”名字，进入spout界面；在Executors区域点击Port端口，修改跳转地址中的域名，比如http://storm-supervisor2:8000/log?file=SchedulerTopology-29-1490003819-worker-6705.log 中的storm-supervisor2替换为实际部署storm-supervisor2的主机ip（此处是node4的ip）。  
+点击Download full log，下载完整日志，正常情况下日志中不应该包含错误栈或者Error信息。    
+HdfsTopology的Spout log，查看方法与上述DataLoadScheduleTopology类似，不过这里的Spout名称为"hdfs-kafka-spout"，同样需要确保spout日志中不能包含错误栈或者Errors信息。   
 
 ###### ddm-message-handler  
 

@@ -201,231 +201,269 @@ $ sudo vim /etc/default/docker
 
 打开浏览器访问 http://166.111.7.245:2379/v2/keys/docker/nodes，应看到所有docker工作机都被注册。访问etcd集群的其它节点（更换上面地址中的ip，其它地址不变），应该能看到相同的内容。
 
-安装KMX
-导入开-compose镜像包
-$ sudo docker load < k2-compose-0_4_0.tar
-类似这样导完其他的镜像包，导完执行$ sudo docker images 总共应该可以看到44个镜像。
+## Docker镜像部署  
+###### docker-compose
+导入docker-compose镜像包：   
 
-生产配置文件
-KMX提供了命令行工具，启动方式如下：
-$ sudo docker run -it --rm -v $(pwd):/k2-compose-files kmx.k2data.com.cn:5000/k2data/k2-compose:1.2.1 config
+	$ sudo docker load < docker-compose-0_4_0.tar  
 
-Kafka
-执行下列操作：
-k2-compose up -d kafka1   #根据k2-compose文件中实际的kafka服务个数启动
+类似这样导完其他的镜像包，导完执行$ sudo docker images 总共应该可以看到44个镜像。  
 
-验证：
-在任意一台工作机上执行下列操作进入验证环境：
-$ sudo docker run -it --rm --net=prodyct_default --entrypoint bash kmx.k2data.com.cn:5000/k2data/kafka:1.2.1-0.8.2.2
-进入容器后
-# cd /opt/apache/kafka_2.10-0.8.2.2
-# bin/kafka-topics.sh --zookeeper 166.111.7.246 --list
-# bin/kafka-topics.sh --zookeeper 166.111.7.246 --create --partitions=1 --topic k2_test --replication-factor=1
-成功返回 Created topic "k2_test".
-# bin/kafka-topics.sh --zookeeper 166.111.7.246 --describe                                                    
-Topic:k2_test	PartitionCount:1	ReplicationFactor:1	Configs:
-	Topic: k2_test	Partition: 0	Leader: 1	Replicas: 1	Isr: 1
-root@97db2625e590:/opt/apache/kafka_2.10-0.8.2.2# bin/kafka-topics.sh --zookeeper 166.111.7.246 --list
-k2_test
-# bin/kafka-console-producer.sh --broker-list 166.111.7.246:9092 --topic k2_test
-[2017-04-06 13:57:27,138] WARN Property topic is not valid (kafka.utils.VerifiableProperties)
-test1
-test2 
-# bin/kafka-topics.sh --zookeeper 166.111.7.246 --topic k2_test --from-beginning
-# bin/kafka-topics.sh --zookeeper 166.111.7.246 --delete --topic k2_test
-Topic k2_test is marked for deletion.
-Note: This will have no impact if delete.topic.enable is not set to true.
-# bin/kafka-topics.sh --zookeeper 166.111.7.246 --list
+生产配置文件  
+KMX提供了命令行工具，启动方式如下：  
 
-STORM
-执行下列操作：
-k2-compose up -d storm-ui
-k2-compose up -d storm-nimbus # k2-compose up -d --ignore-deps storm-nimbus
-k2-compose up -d storm-supervisor1  #根据k2-compose文件中包含的实际storm-supervisor数目启动
+	$ sudo docker run -it --rm -v $(pwd):/docker-compose-files 166.111.7.245:5000/bigdata/docker-compose:1.2.1 config  
+
+***** Kafka   
+执行下列操作：  
+
+	docker-compose up -d kafka1   #根据docker-compose文件中实际的kafka服务个数启动
+
+验证：  
+在任意一台工作机上执行下列操作进入验证环境：  
+
+	$ sudo docker run -it --rm --net=prodyct_default --entrypoint bash 166.111.7.245:5000/bigdata/kafka:1.2.1-0.8.2.2   
+
+进入容器后：  
+
+	# cd /opt/apache/kafka_2.10-0.8.2.2  
+	# bin/kafka-topics.sh --zookeeper 166.111.7.246 --list  
+	# bin/kafka-topics.sh --zookeeper 166.111.7.246 --create --partitions=1 --topic test --replication-factor=1  
+
+成功返回 Created topic "test".   
+
+	# bin/kafka-topics.sh --zookeeper 166.111.7.246 --describe                                                    
+	Topic:test	PartitionCount:1	ReplicationFactor:1	Configs:
+		Topic: test	Partition: 0	Leader: 1	Replicas: 1	Isr: 1
+	root@97db2625e590:/opt/apache/kafka_2.10-0.8.2.2# bin/kafka-topics.sh --zookeeper 166.111.7.246 --list
+	test
+	# bin/kafka-console-producer.sh --broker-list 166.111.7.246:9092 --topic test
+	[2017-04-06 13:57:27,138] WARN Property topic is not valid (kafka.utils.VerifiableProperties)
+	test1
+	test2 
+	# bin/kafka-topics.sh --zookeeper 166.111.7.246 --topic test --from-beginning
+	# bin/kafka-topics.sh --zookeeper 166.111.7.246 --delete --topic test
+	Topic test is marked for deletion.
+	Note: This will have no impact if delete.topic.enable is not set to true.
+	# bin/kafka-topics.sh --zookeeper 166.111.7.246 --list
+
+##### STORM  
+执行下列操作：  
+
+	docker-compose up -d storm-ui  
+	docker-compose up -d storm-nimbus # docker-compose up -d --ignore-deps storm-nimbus  
+	docker-compose up -d storm-supervisor1  #根据docker-compose文件中包含的实际storm-supervisor数目启动  
 
 页面验证
 在浏览器中打开http://<node1_ip>:8080，有几个super 就能看到几个
 
 
 
-ActiveMQ
-k2-compose up -d activemq
+##### ActiveMQ   
+
+	docker-compose up -d activemq   
+	
 验证：
-在浏览器中打开http://<node2_ip>:8161，用户名密码都是admin
+在浏览器中打开http://<node2_ip>:8161，用户名密码都是admin  
 
 
-ElasticSearch
-k2-compose up -d elasticsearch
-访问 http://stream1-ip:9200地址，看到如下信息表示正确安装：
+##### ElasticSearch  
+
+	docker-compose up -d elasticsearch    
+	
+访问 http://stream1-ip:9200地址，看到如下信息表示正确安装：  
 
 
-Logstash
-k2-compose up -d logstash-batch1  #根据k2-compose文件确定实际的数量
+##### Logstash  
 
-DDM
-k2-compose up -d ddm-audit-db
-k2-compose bash ddm-audit-db #进入audit-db容器
-mysql -uroot -ppassw0rd -e "show databases;"
-正常情况可以看到如下信息：
+	docker-compose up -d logstash-batch1  #根据docker-compose文件确定实际的数量   
 
+##### DDM  
 
-启动flag-db
-启动flag-db前先 rm -rf /kmx/flag-db，不然会导致数据库初始化时stats相关数据库无法创建
-k2-compose up -d ddm-flag-db
-k2-compose bash ddm-flag-db #进入flag-db容器
-mysql -uroot -ppassw0rd -e "show databases;"   #查看数据库
+	docker-compose up -d ddm-audit-db  
+	docker-compose bash ddm-audit-db #进入audit-db容器  
+	mysql -uroot -ppassw0rd -e "show databases;"   
+	
+正常情况可以看到如下信息：  
 
+##### flag-db  
+启动flag-db前先 rm -rf /kmx/flag-db，不然会导致数据库初始化时stats相关数据库无法创建  
 
-初始化ddm环境
-执行下列操作，确保每步操作返回码都是exit with code 0：
-k2-compose -f config.yml up ddm-conf #向zookeeper中写入配置信息
-k2-compose -f config.yml up ddm-reset1  #清空audit-db和storm拓扑
-k2-compose -f config.yml up ddm-reset2  #清空kafka中的topic数据
-k2-compose -f config.yml up ddm-avro-hdfs-topo  #提交基础拓扑：auditTopology, DataLoadScheduleTopology, HdfsTopology和HdfsTopology_anormaly
-k2-compose -f config.yml up ddm-raw-avro-topo  #提交协议转化拓扑（json格式）：AdapterTopology
-k2-compose -f config.yml up ddm-raw-avro-topo-binary  #提交协议转化拓扑（二进制格式）：BinaryAdapterTopology
+	docker-compose up -d ddm-flag-db  
+	docker-compose bash ddm-flag-db #进入flag-db容器  
+	mysql -uroot -ppassw0rd -e "show databases;"   #查看数据库  
 
-访问地址http://<node1_ip>:8080/index.html，在topology summary中看到如下7个拓扑，确保每个拓扑的Num workers不等于0：
+##### 初始化ddm环境
+执行下列操作，确保每步操作返回码都是exit with code 0： 
+
+	docker-compose -f config.yml up ddm-conf #向zookeeper中写入配置信息  
+	docker-compose -f config.yml up ddm-reset1  #清空audit-db和storm拓扑  
+	docker-compose -f config.yml up ddm-reset2  #清空kafka中的topic数据  
+	docker-compose -f config.yml up ddm-avro-hdfs-topo  #提交基础拓扑：auditTopology, DataLoadScheduleTopology, HdfsTopology和HdfsTopology_anormaly  
+	docker-compose -f config.yml up ddm-raw-avro-topo  #提交协议转化拓扑（json格式）：AdapterTopology  
+	docker-compose -f config.yml up ddm-raw-avro-topo-binary  #提交协议转化拓扑（二进制格式）：BinaryAdapterTopology  
+
+访问地址http://<node1_ip>:8080/index.html，在topology summary中看到如下7个拓扑，确保每个拓扑的Num workers不等于0：  
 
 其中一个为0但点进去后没有发现error,第一个点进去发现了error"java.lang.RuntimeException: java.lang.RuntimeException: java.lang.RuntimeException: org.apache.zookeeper.KeeperException$ConnectionLossException: KeeperErrorCode = ConnectionLoss for /brokers/topics/d",
 查看日志文件 http://166.111.7.246:8000/log?file=AdapterTopology-13-1491491766-worker-6700.log
-没有error信息并且“Session establishment complete on server 166.111.7.246/166.111.7.246:2181, sessionid = 0x15b43e66b550029, negotiated timeout = 40000”可以不用管
-重点check：
-SchedulerTopology的Spout log，查看方法是：
-在Storm ui首页http://<node1_ip>:8080/index.html点击SchedulerTopology名字，跳转页面后在Spouts区域点击“scheduler-spout”名字，进入spout界面；在Executors区域点击Port端口，修改跳转地址中的域名，比如http://storm-supervisor2:8000/log?file=SchedulerTopology-29-1490003819-worker-6705.log中的storm-supervisor2替换为实际部署storm-supervisor2的主机ip（此处是node4的ip）
-点击Download full log，下载完整日志，正常情况下日志中不应该包含错误栈或者Error信息。
-HdfsTopology的Spout log，查看方法与上述DataLoadScheduleTopology类似，不过这里的Spout名称为"hdfs-kafka-spout"，同样需要确保spout日志中不能包含错误栈或者Errors信息。
+没有error信息并且“Session establishment complete on server 166.111.7.246/166.111.7.246:2181, sessionid = 0x15b43e66b550029, negotiated timeout = 40000”可以不用管。  
+重点check：  
+SchedulerTopology的Spout log，查看方法是：  
+在Storm ui首页http://<node1_ip>:8080/index.html点击SchedulerTopology名字，跳转页面后在Spouts区域点击“scheduler-spout”名字，进入spout界面；在Executors区域点击Port端口，修改跳转地址中的域名，比如http://storm-supervisor2:8000/log?file=SchedulerTopology-29-1490003819-worker-6705.log中的storm-supervisor2替换为实际部署storm-supervisor2的主机ip（此处是node4的ip）。  
+点击Download full log，下载完整日志，正常情况下日志中不应该包含错误栈或者Error信息。  
+HdfsTopology的Spout log，查看方法与上述DataLoadScheduleTopology类似，不过这里的Spout名称为"hdfs-kafka-spout"，同样需要确保spout日志中不能包含错误栈或者Errors信息。  
 
-安装ddm-message-handler
-k2-compose up -d ddm-message-handler
-验证：
-访问地址http://<node2_ip>:8161/admin/queues.jsp，确保Queues中有两个队列，并且每个队列的Number of Consumers不为0：
+###### ddm-message-handler  
 
+	docker-compose up -d ddm-message-handler  
 
-ddm-audit-rest
-k2-compose up -d ddm-audit-rest
-验证：
-访问http://<as1_ip>:8087/storm/topologies，有如下数据就是成功。
-"code":0,"message":"success"
+验证：  
+访问地址http://<node2_ip>:8161/admin/queues.jsp，确保Queues中有两个队列，并且每个队列的Number of Consumers不为0：  
 
+###### ddm-audit-rest
 
-ddm-batch-rest
-k2-compose up -d ddm-batch-rest
-验证：
-访问http://<as1_ip>:8124/batch-rest/workflows，有如下数据就是成功。
-"code":0,"message":"success"
+	docker-compose up -d ddm-audit-rest  
+	
+验证： 
+访问http://<as1_ip>:8087/storm/topologies，返回 "code":0,"message":"success" 成功。  
 
-batchload
-k2-compose up -d batchload
+###### ddm-batch-rest 
 
-ddm-batch-task
-k2-compose up -d ddm-batch-task
+	docker-compose up -d ddm-batch-rest  
 
-K2DB
-k2-compose up -d k2db-server1 k2db-server2 k2db-server3 k2db-server4  #根据k2-compose文件中包含的实际k2db-server个数启动
-k2-compose up -d k2db-haproxy
-k2-compose up -d k2db-rest
-验证：
-访问地址http://<node2_ip>:8089/data-service/v3/health，返回如下结果：
+验证：  
+访问http://<as1_ip>:8124/batch-rest/workflows，返回 "code":0,"message":"success" 成功。  
 
+###### batchload  
 
-SDM
-k2-compose up -d sdm-db
-k2-compose -f config.yml up sdm-api-reset   #正常情况执行结果exited with code 0
-k2-compose up -d sdm-api
-验证：
-访问http://<node2_ip>:8081/data-service/v2/field-groups，返回如下结果：
+	docker-compose up -d batchload  
+
+###### ddm-batch-task  
+
+	docker-compose up -d ddm-batch-task  
+
+##### H3DB  
+
+	docker-compose up -d H3DB-server1 H3DB-server2 H3DB-server3 H3DB-server4  #根据docker-compose文件中包含的实际H3DB-server个数启动  
+	docker-compose up -d H3DB-haproxy  
+	docker-compose up -d H3DB-rest  
+	
+验证：  
+访问地址http://<node2_ip>:8089/data-service/v3/health，返回如下结果：  
 
 
-TUB
-k2-compose up -d tub-db
-k2-compose up -d tub-server
+##### SDM  
+
+	docker-compose up -d sdm-db  
+	docker-compose -f config.yml up sdm-api-reset   #正常情况执行结果exited with code 0  
+	docker-compose up -d sdm-api  
+
+验证：  
+访问http://<node2_ip>:8081/data-service/v2/field-groups，返回如下结果：  
+
+##### TUB  
+
+	docker-compose up -d tub-db  
+	docker-compose up -d tub-server  
+
 验证：
 访问http://<as1_ip>:21691/tub/v1/health，返回如下结果：
 
 
-1.2.1版本不用安装CAS，但是需要k2-compose.yaml文件中
-pas和pas-ui中的配置
-USE_CAS: 'true'
-改为USE_CAS: 'false'
+##### DDS
+DDS提供通过REST接口向平台写入实时数据的服务。  
 
-DDS
-DDS提供通过REST接口向KMX写入实时数据的服务。
-k2-compose up -d  dds-api
-验证：
-访问地址http://<node2_ip>:8082/data-service/v2/channels/health，返回如下结果：
+	docker-compose up -d  dds-api  
 
+验证：  
+访问地址http://<node2_ip>:8082/data-service/v2/channels/health，返回如下结果：  
 
-PAS
-执行下列操作：
-k2-compose up -d pas-db
-k2-compose -f config.yml up pas-db-init #初始化数据库,会重新建表清空所有数据
-k2-compose up -d rserve1
-k2-compose up -d rserve2
-...                                     #rserve个数和datanode个数一样
-k2-compose up -d pas
-k2-compose up -d pas-ui
+##### PAS  
+执行下列操作：   
 
-准备模型库数据:
-执行步骤:
-1.文件上传到pas-db宿主机 /kmx/pas/tmp 目录下
+	docker-compose up -d pas-db  
+	docker-compose -f config.yml up pas-db-init #初始化数据库,会重新建表清空所有数据  
+	docker-compose up -d rserve1  
+	docker-compose up -d rserve2  
+	...                                     #rserve个数和datanode个数一样  
+	docker-compose up -d pas  
+	docker-compose up -d pas-ui  
 
+准备模型库数据   
+执行步骤:  
+1.文件上传到pas-db宿主机 /kmx/pas/tmp 目录下  
+2.进入pas-db镜像 :  
 
+	docker exec -it [docker name] bash  
 
-2.进入pas-db镜像 :docker exec -it [docker name] bash
-3.mysql -uroot -ppassw0rd
-   mysql>use pasdb;
-   mysql>set names utf8;
-   mysql>source /kmx/pas/tmp/alg_type.sql
-   mysql>source /kmx/pas/tmp/alg.sql
-验证：
-访问地址http://<node2_ip>:8085/pas/services/health，返回如下结果：
+3. 进入mysql导入数据库  
 
-2. k2-compose bash pas
-进入容器后
-sh /usr/local/kmx/pas/sbin/runDemo.sh
-如果成功，则pas可用。
+	mysql -uroot -ppassw0rd   
+	mysql>use pasdb;  
+	mysql>set names utf8;   
+	mysql>source /kmx/pas/tmp/alg_type.sql   
+	mysql>source /kmx/pas/tmp/alg.sql   
 
-Console
-k2-compose up -d console
-验证:
-访问http://<as1_ip>:5002
+验证：  
+访问地址http://<node2_ip>:8085/pas/services/health，返回如下结果：  
 
-Merge
-通过merge合并load产生的小文件
-k2-compose up -d k2db-merge
-验证
-k2-compose bash k2db-merge
+4.进入pas容器  
 
-在k2db-merge容器中
-crontab -l
-会得到如下结果：
-0 12 1-31 1-12 0-6 /opt/k2data/startMerge.sh
-*/10 * * * * /opt/k2data/startRollback.sh
+	docker-compose bash pas  
+	sh /usr/local/kmx/pas/sbin/runDemo.sh  
+	
+如果成功，则pas可用。  
 
-动态时序数据的聚合服务
-# 天粒度的聚合 参加DDM部分的ddm-batch-task部署，ddm-batch-task包含了对实时数据和批量数据的天粒度聚合
-k2-compose up -d stats-task-week  # 周粒度的聚合
-k2-compose up -d stats-task-month # 月粒度的聚合
-k2-compose up -d stats-task-year  # 年粒度的聚合
+##### Console  
 
-验证：
-k2-compose  logs -f stats-rotation-day # 查看天粒度的数据轮转服务启动日志
-k2-compose logs -f stats-task-week #查看周粒度的聚合服务启动日志
-k2-compose logs -f stats-task-month #查看月粒度的聚合服务启动日志
-k2-compose logs -f stats-task-year #查看年粒度的聚合服务启动日志
+	docker-compose up -d console  
 
-动态时序数据轮转服务
-k2-compose up -d stats-rotation-day   # 天粒度的数据轮转
-k2-compose up -d stats-rotation-week  # 周粒度的数据轮转
-k2-compose up -d stats-rotation-month # 月粒度的数据轮转
-k2-compose up -d stats-rotation-year  # 年粒度的数据轮转
+验证:  
+访问http://<as1_ip>:5002  
+
+##### Merge  
+通过merge合并load产生的小文件  
+
+	docker-compose up -d H3DB-merge  
+
+验证  
+
+	docker-compose bash H3DB-merge  
+
+进入H3DB-merge容器后,crontab -l 会得到如下结果：  
+	0 12 1-31 1-12 0-6 /opt/bigdata/startMerge.sh  
+	*/10 * * * * /opt/bigdata/startRollback.sh  
+
+动态时序数据的聚合服务  
+#天粒度的聚合 参加DDM部分的ddm-batch-task部署，ddm-batch-task包含了对实时数据和批量数据的天粒度聚合  
+
+	docker-compose up -d stats-task-week  # 周粒度的聚合  
+	docker-compose up -d stats-task-month # 月粒度的聚合  
+	docker-compose up -d stats-task-year  # 年粒度的聚合  
+
+验证：  
+
+	docker-compose  logs -f stats-rotation-day # 查看天粒度的数据轮转服务启动日志  
+	docker-compose logs -f stats-task-week #查看周粒度的聚合服务启动日志  
+	docker-compose logs -f stats-task-month #查看月粒度的聚合服务启动日志  
+	docker-compose logs -f stats-task-year #查看年粒度的聚合服务启动日志  
+
+动态时序数据轮转服务  
+
+	docker-compose up -d stats-rotation-day   # 天粒度的数据轮转  
+	docker-compose up -d stats-rotation-week  # 周粒度的数据轮转  
+	docker-compose up -d stats-rotation-month # 月粒度的数据轮转  
+	docker-compose up -d stats-rotation-year  # 年粒度的数据轮转  
+
 (注意：该服务可按需选择启动或不启动。说明：如果不启动此轮转服务，可通过在查询语句中不指定aggregationOptions且设置 timeRange.start、timeRange.end为自然年起始值来实现对历史全量数据的统计查询)
 
-验证：
-k2-compose  logs -f stats-rotation-day # 查看天粒度的数据轮转服务启动日志
-k2-compose logs -f stats-task-week #查看周粒度的聚合服务启动日志
-k2-compose logs -f stats-task-month #查看月粒度的聚合服务启动日志
-k2-compose logs -f stats-task-year #查看年粒度的聚合服务启动日志
+验证：  
+
+	docker-compose  logs -f stats-rotation-day # 查看天粒度的数据轮转服务启动日志  
+	docker-compose logs -f stats-task-week #查看周粒度的聚合服务启动日志  
+	docker-compose logs -f stats-task-month #查看月粒度的聚合服务启动日志  
+	docker-compose logs -f stats-task-year #查看年粒度的聚合服务启动日志  
 
 上述验证执行完每一步操作后应该出现类似这样的返回结果：
+

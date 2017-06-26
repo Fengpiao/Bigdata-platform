@@ -11,7 +11,8 @@
     
 修改hostname，注释127.0.1.1那一行并且添加所有节点ip和hostname的映射关系  
 
-	$ sudo vi /etc/hosts  
+	$ sudo vi /etc/hosts 
+ ![images](https://github.com/Fengpiao/Bigdata-platform/images/printScreen1.png)	
 
 修改好host后，重启网络生效  
 
